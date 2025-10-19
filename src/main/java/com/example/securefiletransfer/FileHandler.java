@@ -13,6 +13,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,7 +39,7 @@ public class FileHandler {
         SwingWorker<Object[], Void> viewerWorker = new SwingWorker<>() {
             @Override
             protected Object[] doInBackground() throws Exception {
-                String sql = "SELECT filename, file_data FROM files WHERE id = ?";
+                String sql = "SELECT filename, file_data, expiry_time FROM files WHERE id = ?";
                 try (Connection conn = DatabaseManager.getConnection();
                      PreparedStatement stmt = conn.prepareStatement(sql)) {
                     stmt.setInt(1, fileId);
@@ -46,7 +48,8 @@ public class FileHandler {
                             String filename = rs.getString("filename");
                             Blob blob = rs.getBlob("file_data");
                             byte[] fileBytes = blob.getBytes(1, (int) blob.length());
-                            return new Object[]{filename, fileBytes};
+                            Timestamp expiry = rs.getTimestamp("expiry_time");
+                            return new Object[]{filename, fileBytes, expiry};
                         }
                     }
                 }
@@ -57,7 +60,7 @@ public class FileHandler {
             protected void done() {
                 try {
                     Object[] result = get();
-                    if (result == null || result.length != 2) {
+                    if (result == null || result.length != 3) {
                         JOptionPane.showMessageDialog(parent, 
                             "Could not retrieve file data from database.", 
                             "View Error", 
@@ -67,6 +70,18 @@ public class FileHandler {
 
                     String filename = ((String) result[0]).toLowerCase();
                     byte[] fileBytes = (byte[]) result[1];
+                    Timestamp expiryTimestamp = (Timestamp) result[2];
+
+                    // --- Check expiry ---
+                    if (!(parent instanceof AdminPanel)) { // Non-admin users
+                        if (expiryTimestamp != null && expiryTimestamp.before(Timestamp.valueOf(LocalDateTime.now()))) {
+                            JOptionPane.showMessageDialog(parent,
+                                "Access denied. The file has expired.",
+                                "Expired",
+                                JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+                    }
 
                     Component viewComponent;
                     if (filename.endsWith(".png") || filename.endsWith(".jpg") ||
@@ -86,33 +101,36 @@ public class FileHandler {
                         return;
                     }
 
-                    // Get request ID for expiry monitoring
-                    // Get request ID for expiry monitoring
-int requestId;
-// Check if the viewer is an admin. Admins don't need a request.
-if (parent instanceof AdminPanel) {
-    requestId = 0; // Use a special value (0) for admin access.
-} else {
-    // If it's a regular user, find their approved request.
-    requestId = -1; // Default to no access
-    try {
-        String requestSql = "SELECT r.id FROM requests r " +
-                            "WHERE r.user_id = ? AND r.file_id = ? AND r.status = 'approved' " +
-                            "AND (r.expiry_time IS NULL OR r.expiry_time > NOW())";
-        try (Connection conn = DatabaseManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(requestSql)) {
-            stmt.setInt(1, SecureFileTransfer.getUserId());
-            stmt.setInt(2, fileId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    requestId = rs.getInt("id");
-                }
-            }
-        }
-    } catch (SQLException e) {
-        LOGGER.log(Level.WARNING, "Error getting request ID for file access", e);
-    }
-}
+                    int requestId;
+                    if (parent instanceof AdminPanel) {
+                        requestId = 0; // Admin bypass
+                    } else {
+                        // Verify the user has an approved, non-expired request
+                        requestId = -1;
+                        try {
+                            String requestSql = "SELECT r.id FROM requests r " +
+                                                "WHERE r.user_id = ? AND r.file_id = ? AND r.status = 'approved' " +
+                                                "AND (r.expiry_time IS NULL OR r.expiry_time > NOW())";
+                            try (Connection conn = DatabaseManager.getConnection();
+                                 PreparedStatement stmt = conn.prepareStatement(requestSql)) {
+                                stmt.setInt(1, SecureFileTransfer.getUserId());
+                                stmt.setInt(2, fileId);
+                                try (ResultSet rs = stmt.executeQuery()) {
+                                    if (rs.next()) requestId = rs.getInt("id");
+                                }
+                            }
+                        } catch (SQLException e) {
+                            LOGGER.log(Level.WARNING, "Error getting request ID for file access", e);
+                        }
+
+                        if (requestId == -1) {
+                            JOptionPane.showMessageDialog(parent,
+                                "You do not have permission to view this file or your access has expired.",
+                                "Access Denied",
+                                JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+                    }
 
                     if (viewComponent != null) {
                         ViewerDialog dialog = new ViewerDialog(
@@ -124,6 +142,7 @@ if (parent instanceof AdminPanel) {
                         );
                         dialog.showDialog();
                     }
+
                 } catch (InterruptedException | ExecutionException e) {
                     LOGGER.log(Level.SEVERE, "Error viewing file", e);
                     JOptionPane.showMessageDialog(parent, 
@@ -155,7 +174,6 @@ if (parent instanceof AdminPanel) {
         try (PDDocument document = PDDocument.load(new ByteArrayInputStream(fileBytes))) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             int pageCount = document.getNumberOfPages();
-
             JPanel pdfPanel = new JPanel(new GridLayout(0, 1, 0, 10));
             for (int page = 0; page < pageCount; page++) {
                 BufferedImage image = pdfRenderer.renderImageWithDPI(page, 100);
@@ -189,12 +207,20 @@ if (parent instanceof AdminPanel) {
     }
 
     public static void downloadFile(int fileId, File saveLocation) {
-        String sql = "SELECT file_data FROM files WHERE id = ?";
+        String sql = "SELECT file_data, expiry_time FROM files WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, fileId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    Timestamp expiry = rs.getTimestamp("expiry_time");
+                    if (expiry != null && expiry.before(Timestamp.valueOf(LocalDateTime.now()))) {
+                        JOptionPane.showMessageDialog(null,
+                            "Cannot download. The file has expired.",
+                            "Expired",
+                            JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                     Blob blob = rs.getBlob("file_data");
                     try (InputStream in = blob.getBinaryStream();
                          FileOutputStream out = new FileOutputStream(saveLocation)) {

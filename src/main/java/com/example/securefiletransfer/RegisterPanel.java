@@ -7,6 +7,8 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -24,6 +26,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.JTextComponent;
 
 public class RegisterPanel extends JPanel {
     private final JTextField nameField, emailField, mobileField, usernameField;
@@ -47,8 +50,8 @@ public class RegisterPanel extends JPanel {
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(UITheme.PANEL_BACKGROUND_COLOR);
         formPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(221, 221, 221)),
-            BorderFactory.createEmptyBorder(20, 30, 20, 30)
+                BorderFactory.createLineBorder(new Color(221, 221, 221)),
+                BorderFactory.createEmptyBorder(20, 30, 20, 30)
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -67,13 +70,29 @@ public class RegisterPanel extends JPanel {
         gbc.insets = new Insets(5, 10, 5, 10);
         gbc.gridwidth = 1;
         gbc.gridy++;
+
+        // Full Name
         addLabelAndField("Full Name:", nameField = new JTextField(25), formPanel, gbc);
         gbc.gridy++;
+
+        // Email
         addLabelAndField("Email:", emailField = new JTextField(25), formPanel, gbc);
+
+        // OTP caution under email
         gbc.gridy++;
+        JLabel emailCaution = new JLabel("*This email is used for OTPs");
+        emailCaution.setFont(UITheme.LABEL_FONT.deriveFont(Font.ITALIC, 11f));
+        emailCaution.setForeground(Color.GRAY);
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        formPanel.add(emailCaution, gbc);
+
+        gbc.gridy++;
+        // Mobile
         addLabelAndField("Mobile No:", mobileField = new JTextField(25), formPanel, gbc);
-        
+
         gbc.gridy++;
+        // Address
         JLabel addressLabel = new JLabel("Address:");
         addressLabel.setFont(UITheme.LABEL_FONT);
         gbc.gridx = 0;
@@ -86,10 +105,16 @@ public class RegisterPanel extends JPanel {
         formPanel.add(new JScrollPane(addressArea), gbc);
 
         gbc.gridy++;
+        // Username
         addLabelAndField("Username:", usernameField = new JTextField(25), formPanel, gbc);
-        gbc.gridy++;
-        addLabelAndField("Password:", passwordField = new JPasswordField(25), formPanel, gbc);
+        addPlaceholder(usernameField, "*Used for login*");
 
+        gbc.gridy++;
+        // Password
+        addLabelAndField("Password:", passwordField = new JPasswordField(25), formPanel, gbc);
+        //addPlaceholder(passwordField, "*Used for login*");
+
+        // Password strength indicator
         JPanel strengthPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         strengthPanel.setOpaque(false);
         strengthDots = new PasswordStrengthDots();
@@ -110,6 +135,7 @@ public class RegisterPanel extends JPanel {
             @Override public void changedUpdate(DocumentEvent e) { updatePasswordStrength(); }
         });
 
+        // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttonPanel.setOpaque(false);
         JButton registerButton = new JButton("Register Account");
@@ -117,34 +143,35 @@ public class RegisterPanel extends JPanel {
         JButton backButton = new JButton("Back to Login");
         buttonPanel.add(registerButton);
         buttonPanel.add(backButton);
-        
+
         gbc.insets = new Insets(15, 10, 5, 10);
         gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
         formPanel.add(buttonPanel, gbc);
-        
+
         rightPanel.add(formPanel, new GridBagConstraints());
         registerButton.addActionListener(e -> handleRegister());
         backButton.addActionListener(e -> SecureFileTransfer.showPanel("UserLogin"));
+
         updatePasswordStrength();
     }
-    
+
     private void updatePasswordStrength() {
         String password = new String(passwordField.getPassword());
         int score = 0;
-        
+
         if (password.length() >= 8) score++;
         if (password.length() >= 12) score++;
         if (password.matches(".*[a-z].*") && password.matches(".*[A-Z].*")) score++;
         if (password.matches(".*\\d.*")) score++;
         if (password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) score++;
-        
+
         strengthDots.setStrengthLevel(score);
 
         Color textColor = Color.GRAY;
         String text = "";
-        
+
         if (!password.isEmpty()) {
             switch (score) {
                 case 1: text = "Very Weak"; textColor = new Color(220, 53, 69); break;
@@ -155,7 +182,7 @@ public class RegisterPanel extends JPanel {
                 default: text = "Very Weak"; textColor = new Color(220, 53, 69);
             }
         }
-        
+
         strengthLabel.setText(text);
         strengthLabel.setForeground(textColor);
     }
@@ -171,6 +198,27 @@ public class RegisterPanel extends JPanel {
         panel.add(field, gbc);
     }
 
+    private void addPlaceholder(JTextComponent field, String placeholder) {
+        field.setForeground(Color.GRAY);
+        field.setText(placeholder);
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+    }
+
     private void handleRegister() {
         String fullName = nameField.getText();
         String email = emailField.getText();
@@ -179,7 +227,9 @@ public class RegisterPanel extends JPanel {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        if (fullName.isEmpty() || email.isEmpty() || mobile.isEmpty() || address.isEmpty() || username.isEmpty() || password.isEmpty()) {
+        // All fields required validation
+        if (fullName.isEmpty() || email.isEmpty() || mobile.isEmpty() || address.isEmpty() || username.isEmpty() || password.isEmpty() ||
+            username.equals("*Used for login*")) {
             JOptionPane.showMessageDialog(this, "All fields are required.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }

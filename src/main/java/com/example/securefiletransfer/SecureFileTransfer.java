@@ -2,9 +2,14 @@ package com.example.securefiletransfer;
 
 import java.awt.CardLayout;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -55,6 +60,17 @@ public class SecureFileTransfer {
         userId = id;
         username = name;
     }
+    public static void openChatWindow() {
+        JFrame chatFrame = new JFrame("Admin Chat");
+        chatFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        chatFrame.setSize(500, 600);
+        chatFrame.setLocationRelativeTo(frame); // center relative to main frame
+
+        ChatPanel chatPanel = new ChatPanel(); // your existing ChatPanel
+        chatFrame.add(chatPanel);
+        chatFrame.setVisible(true);
+    }
+
 
     public static void logoutUser() {
         userId = -1;
@@ -78,5 +94,58 @@ public class SecureFileTransfer {
     public static void showUserPanel() {
         mainPanel.add(new UserPanel(), "User");
         cardLayout.show(mainPanel, "User");
+    }
+
+    /**
+     * Opens a file from the database using its ID.
+     * Creates a temporary file and opens it with the default system application.
+     */
+    public static void viewFile(int fileId) {
+        String sql = "SELECT filename, file_data FROM files WHERE id = ?";
+        try (java.sql.Connection conn = DatabaseManager.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, fileId);
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String fileName = rs.getString("filename");
+                    InputStream fileData = rs.getBinaryStream("file_data");
+
+                    // Determine file extension
+                    String suffix = fileName.contains(".") ? fileName.substring(fileName.lastIndexOf(".")) : null;
+                    File tempFile = File.createTempFile("securefile_", suffix);
+                    tempFile.deleteOnExit();
+
+                    try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = fileData.read(buffer)) != -1) {
+                            fos.write(buffer, 0, bytesRead);
+                        }
+                    }
+
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().open(tempFile);
+                    } else {
+                        JOptionPane.showMessageDialog(frame,
+                                "Cannot open file on this system.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(frame,
+                            "File not found.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame,
+                    "Error opening file: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }
 }

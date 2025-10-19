@@ -10,11 +10,13 @@ import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 public class UserPanel extends JPanel {
@@ -26,7 +28,7 @@ public class UserPanel extends JPanel {
         setBackground(UITheme.BACKGROUND_COLOR);
         setBorder(UITheme.PADDED_BORDER);
 
-        // Header
+        // ---------------- Header ----------------
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
@@ -35,13 +37,13 @@ public class UserPanel extends JPanel {
         welcomeLabel.setForeground(UITheme.HEADER_COLOR);
 
         JButton logoutButton = new JButton("Logout");
-        UITheme.styleButton(logoutButton, UITheme.REJECT_COLOR, UITheme.ICON_LOGOUT);
+        UITheme.styleButton(logoutButton, UITheme.REJECT_COLOR, ""); // No icon
 
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
         headerPanel.add(logoutButton, BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
 
-        // Table Section
+        // ---------------- Table Section ----------------
         JPanel tablePanel = new JPanel(new BorderLayout(10, 10));
         tablePanel.setBackground(UITheme.PANEL_BACKGROUND_COLOR);
         tablePanel.setBorder(UITheme.PADDED_BORDER);
@@ -55,38 +57,45 @@ public class UserPanel extends JPanel {
         filesTableModel = new DefaultTableModel(new String[]{"File ID", "Filename", "Your Request Status"}, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
-
         filesTable = new JTable(filesTableModel);
         JScrollPane scrollPane = new JScrollPane(filesTable);
         UITheme.styleTable(filesTable, scrollPane);
         filesTable.getColumn("Your Request Status").setCellRenderer(new StatusCellRenderer());
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Buttons
+        // ---------------- Buttons Panel ----------------
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setBackground(UITheme.PANEL_BACKGROUND_COLOR);
 
         JButton requestButton = new JButton("Request File");
         JButton viewButton = new JButton("View File");
+        JButton chatButton = new JButton("Chat with Admin");
 
-        UITheme.styleButton(requestButton, UITheme.PRIMARY_COLOR, UITheme.ICON_REQUEST);
-        UITheme.styleButton(viewButton, UITheme.APPROVE_COLOR, UITheme.ICON_VIEW);
+        UITheme.styleButton(requestButton, UITheme.PRIMARY_COLOR, "");
+        UITheme.styleButton(viewButton, UITheme.APPROVE_COLOR, "");
+        UITheme.styleButton(chatButton, UITheme.PRIMARY_COLOR, "");
 
         buttonPanel.add(requestButton);
         buttonPanel.add(viewButton);
+        buttonPanel.add(chatButton);
+
         tablePanel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(tablePanel, BorderLayout.CENTER);
 
-        // Event Listeners
+        // ---------------- Event Listeners ----------------
         requestButton.addActionListener(e -> handleRequest());
         viewButton.addActionListener(e -> handleViewFile());
         logoutButton.addActionListener(e -> SecureFileTransfer.logoutUser());
+        chatButton.addActionListener(e -> {
+            JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+            new UserChatDialog(parentFrame, SecureFileTransfer.getUserId()).setVisible(true);
+        });
 
         loadFiles();
     }
 
-    // ---- Handle Request ----
+    // ---------------- Handle File Request ----------------
     public void handleRequest() {
         int selectedRow = filesTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -143,7 +152,7 @@ public class UserPanel extends JPanel {
         }
     }
 
-    // ---- Handle Viewing ----
+    // ---------------- Handle File View ----------------
     private void handleViewFile() {
         int selectedRow = filesTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -192,11 +201,11 @@ public class UserPanel extends JPanel {
                         long minutesLeft = timeLeft / (60 * 1000);
                         if (timeLeft < 3600000) {
                             JOptionPane.showMessageDialog(this,
-                                    String.format("Warning: Access expires in %d minutes", minutesLeft),
+                                    String.format("Warning: Access expires in %d minutes", minutesLeft + 1),
                                     "Access Expiring Soon", JOptionPane.WARNING_MESSAGE);
                         }
                     }
-                    FileHandler.viewFileInDialog(this, fileId); // ✅ View file
+                    FileHandler.viewFileInDialog(this, fileId);
                 } else {
                     handleInvalidOrExpiredKey(conn, fileId, key);
                 }
@@ -208,7 +217,7 @@ public class UserPanel extends JPanel {
         }
     }
 
-    // ---- Handle invalid or expired keys ----
+    // ---------------- Handle Invalid or Expired Key ----------------
     private void handleInvalidOrExpiredKey(Connection conn, int fileId, String key) throws SQLException {
         String checkExpiredSql = "SELECT expiry_time FROM requests WHERE user_id = ? AND file_id = ? AND request_key = ? AND status = 'approved'";
         try (PreparedStatement expiredStmt = conn.prepareStatement(checkExpiredSql)) {
@@ -218,7 +227,6 @@ public class UserPanel extends JPanel {
             ResultSet expiredRs = expiredStmt.executeQuery();
 
             if (expiredRs.next()) {
-                // Mark as expired
                 String updateSql = "UPDATE requests SET status = 'expired' WHERE user_id = ? AND file_id = ? AND request_key = ?";
                 try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
                     updateStmt.setInt(1, SecureFileTransfer.getUserId());
@@ -239,7 +247,7 @@ public class UserPanel extends JPanel {
         loadFiles();
     }
 
-    // ---- Load Files ----
+    // ---------------- Load Files ----------------
     public void loadFiles() {
         filesTableModel.setRowCount(0);
         String sql = """
