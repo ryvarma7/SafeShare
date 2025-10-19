@@ -29,29 +29,23 @@ public class StatusCellRenderer extends DefaultTableCellRenderer {
                                                    int row, int column) {
         Component cellComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-        if (value instanceof String) {
-            String status = (String) value;
+        if (value instanceof String status) {
             JLabel label = (JLabel) cellComponent;
             label.setText(status.toUpperCase());
             label.setForeground(Color.WHITE);
-            label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            label.setFont(new Font("Segoe UI", Font.BOLD, 14));
             label.setOpaque(true);
 
-            switch (status.toLowerCase()) {
-                case "pending":
-                    label.setBackground(PENDING_BG);
-                    break;
-                case "approved":
-                    label.setBackground(APPROVED_BG);
-                    break;
-                case "rejected":
-                    label.setBackground(REJECTED_BG);
-                    break;
-                default:
-                    label.setBackground(DEFAULT_BG);
+            Color bgColor = switch (status.toLowerCase()) {
+                case "pending" -> PENDING_BG;
+                case "approved" -> APPROVED_BG;
+                case "rejected" -> REJECTED_BG;
+                default -> {
                     label.setForeground(Color.BLACK);
-                    break;
-            }
+                    yield DEFAULT_BG;
+                }
+            };
+            label.setBackground(bgColor);
         }
         return cellComponent;
     }

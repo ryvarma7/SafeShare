@@ -10,13 +10,11 @@ import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 public class UserPanel extends JPanel {
@@ -35,12 +33,19 @@ public class UserPanel extends JPanel {
         JLabel welcomeLabel = new JLabel("Welcome, " + SecureFileTransfer.getUsername());
         welcomeLabel.setFont(UITheme.TITLE_FONT);
         welcomeLabel.setForeground(UITheme.HEADER_COLOR);
+        headerPanel.add(welcomeLabel, BorderLayout.WEST);
+
+        // --- Header Button (Logout) ---
+        // Create a panel to hold button on the right
+        JPanel headerButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        headerButtonPanel.setOpaque(false);
 
         JButton logoutButton = new JButton("Logout");
         UITheme.styleButton(logoutButton, UITheme.REJECT_COLOR, ""); // No icon
-
-        headerPanel.add(welcomeLabel, BorderLayout.WEST);
-        headerPanel.add(logoutButton, BorderLayout.EAST);
+        
+        headerButtonPanel.add(logoutButton);
+        
+        headerPanel.add(headerButtonPanel, BorderLayout.EAST); // Add button panel to the right
         add(headerPanel, BorderLayout.NORTH);
 
         // ---------------- Table Section ----------------
@@ -49,13 +54,16 @@ public class UserPanel extends JPanel {
         tablePanel.setBorder(UITheme.PADDED_BORDER);
 
         JLabel tableTitle = new JLabel("Available Files for Request");
-        tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+                    tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
         tableTitle.setForeground(UITheme.FONT_COLOR);
         tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         tablePanel.add(tableTitle, BorderLayout.NORTH);
 
         filesTableModel = new DefaultTableModel(new String[]{"File ID", "Filename", "Your Request Status"}, 0) {
-            @Override public boolean isCellEditable(int row, int column) { return false; }
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         filesTable = new JTable(filesTableModel);
         JScrollPane scrollPane = new JScrollPane(filesTable);
@@ -63,21 +71,19 @@ public class UserPanel extends JPanel {
         filesTable.getColumn("Your Request Status").setCellRenderer(new StatusCellRenderer());
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        // ---------------- Buttons Panel ----------------
+        // ---------------- Buttons Panel (Table Specific) ----------------
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setBackground(UITheme.PANEL_BACKGROUND_COLOR);
 
         JButton requestButton = new JButton("Request File");
         JButton viewButton = new JButton("View File");
-        JButton chatButton = new JButton("Chat with Admin");
 
         UITheme.styleButton(requestButton, UITheme.PRIMARY_COLOR, "");
         UITheme.styleButton(viewButton, UITheme.APPROVE_COLOR, "");
-        UITheme.styleButton(chatButton, UITheme.PRIMARY_COLOR, "");
 
         buttonPanel.add(requestButton);
         buttonPanel.add(viewButton);
-        buttonPanel.add(chatButton);
+        // "Chat" button removed from here
 
         tablePanel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -87,10 +93,6 @@ public class UserPanel extends JPanel {
         requestButton.addActionListener(e -> handleRequest());
         viewButton.addActionListener(e -> handleViewFile());
         logoutButton.addActionListener(e -> SecureFileTransfer.logoutUser());
-        chatButton.addActionListener(e -> {
-            JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-            new UserChatDialog(parentFrame, SecureFileTransfer.getUserId()).setVisible(true);
-        });
 
         loadFiles();
     }

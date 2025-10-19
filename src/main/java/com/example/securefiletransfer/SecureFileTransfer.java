@@ -1,23 +1,26 @@
 package com.example.securefiletransfer;
 
+import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-
-import com.formdev.flatlaf.FlatLightLaf;
 
 public class SecureFileTransfer {
+    private static final Logger LOGGER = Logger.getLogger(SecureFileTransfer.class.getName());
 
     private static JFrame frame;
     private static CardLayout cardLayout;
@@ -27,28 +30,38 @@ public class SecureFileTransfer {
 
     public static void main(String[] args) {
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-        } catch (UnsupportedLookAndFeelException e) {
-            System.err.println("Failed to initialize FlatLaf.");
+            // Set system look and feel
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            System.err.println("Failed to set system look and feel: " + e.getMessage());
         }
 
         SwingUtilities.invokeLater(() -> {
+            // Set up main frame
             frame = new JFrame("SafeShare - Secure File Transfer");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setMinimumSize(new Dimension(850, 700));
-
+            frame.setMinimumSize(new Dimension(1000, 800));  // Increased minimum size
+            frame.setPreferredSize(new Dimension(1200, 900)); // Increased preferred size
+            
+            // Create a wrapper panel with simple border
+            JPanel backgroundPanel = new JPanel(new BorderLayout());
+            backgroundPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Increased padding
+            frame.setContentPane(backgroundPanel);
+            
+            // Set up main content panel with card layout
             cardLayout = new CardLayout();
             mainPanel = new JPanel(cardLayout);
-            mainPanel.setBackground(UITheme.BACKGROUND_COLOR);
+            mainPanel.setBackground(new Color(240, 240, 240));  // Light gray background
+            backgroundPanel.add(mainPanel, BorderLayout.CENTER);
 
             mainPanel.add(new LoginPanel("user"), "UserLogin");
             mainPanel.add(new LoginPanel("admin"), "AdminLogin");
             mainPanel.add(new RegisterPanel(), "Register");
             
-            frame.add(mainPanel);
+            frame.pack();
+            showPanel("UserLogin");
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-            showPanel("UserLogin");
         });
     }
     
@@ -59,16 +72,6 @@ public class SecureFileTransfer {
     public static void loginUser(int id, String name) {
         userId = id;
         username = name;
-    }
-    public static void openChatWindow() {
-        JFrame chatFrame = new JFrame("Admin Chat");
-        chatFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        chatFrame.setSize(500, 600);
-        chatFrame.setLocationRelativeTo(frame); // center relative to main frame
-
-        ChatPanel chatPanel = new ChatPanel(); // your existing ChatPanel
-        chatFrame.add(chatPanel);
-        chatFrame.setVisible(true);
     }
 
 
@@ -145,7 +148,7 @@ public class SecureFileTransfer {
                     "Error opening file: " + ex.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error opening file", ex);
         }
     }
 }

@@ -5,9 +5,6 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -15,98 +12,85 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 
 public class UITheme {
-
-    public static final Color PRIMARY_COLOR = new Color(69, 123, 157);
-    public static final Color BACKGROUND_COLOR = new Color(241, 250, 238);
-    public static final Color PANEL_BACKGROUND_COLOR = Color.WHITE;
-    public static final Color HEADER_COLOR = new Color(29, 53, 87);
-    public static final Color FONT_COLOR = new Color(51, 51, 51);
+    // Colors
+    public static final Color BACKGROUND_COLOR = new Color(235, 238, 245);  // Soft blue-gray
+    public static final Color PANEL_BACKGROUND_COLOR = new Color(248, 250, 252);  // Very light blue tint
+    public static final Color HEADER_COLOR = new Color(23, 43, 77);
+    public static final Color FONT_COLOR = new Color(66, 82, 110);
+    public static final Color PRIMARY_COLOR = new Color(0, 120, 212);
     public static final Color APPROVE_COLOR = new Color(40, 167, 69);
     public static final Color REJECT_COLOR = new Color(220, 53, 69);
     public static final Color VIEW_COLOR = new Color(23, 162, 184);
 
+    // Fonts
     public static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 28);
-    public static final Font LABEL_FONT = new Font("Segoe UI", Font.PLAIN, 14);
-    public static final Font TABLE_HEADER_FONT = new Font("Segoe UI", Font.BOLD, 14);
-    public static final Font CARD_VALUE_FONT = new Font("Segoe UI", Font.BOLD, 36);
-    public static final Font CARD_TITLE_FONT = new Font("Segoe UI", Font.BOLD, 16);
+    public static final Font HEADER_FONT = new Font("Segoe UI", Font.BOLD, 20);
+    public static final Font NORMAL_FONT = new Font("Segoe UI", Font.PLAIN, 16);
+    public static final Font SMALL_FONT = new Font("Segoe UI", Font.PLAIN, 14);
 
-    public static final Border PADDED_BORDER = BorderFactory.createEmptyBorder(15, 15, 15, 15);
-
-    public static final String ICON_APPROVE = "✔";
-    public static final String ICON_REJECT = "✖";
-    public static final String ICON_UPLOAD = "⬆";
+    // Icons (Using Unicode characters as placeholders - replace with actual icons if needed)
+    public static final String ICON_LOGOUT = "🚪";
+    public static final String ICON_APPROVE = "✓";
+    public static final String ICON_REJECT = "✕";
     public static final String ICON_VIEW = "👁";
     public static final String ICON_DETAILS = "ℹ";
-    public static final String ICON_DOWNLOAD = "⬇";
-    public static final String ICON_LOGOUT = "⮫";
-    public static final String ICON_REQUEST = "✉";
 
-    public static JPanel createDashboardCard(String title, JLabel valueLabel, Color bgColor) {
-        JPanel card = new JPanel(new BorderLayout(5, 5));
-        card.setBackground(bgColor);
-        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        JLabel titleLabel = new JLabel(title.toUpperCase());
-        titleLabel.setFont(CARD_TITLE_FONT);
-        titleLabel.setForeground(Color.WHITE);
-        valueLabel.setFont(CARD_VALUE_FONT);
-        valueLabel.setForeground(Color.WHITE);
-        valueLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        card.add(titleLabel, BorderLayout.NORTH);
-        card.add(valueLabel, BorderLayout.CENTER);
-        return card;
-    }
+    // Borders
+    public static final Border PADDED_BORDER = BorderFactory.createEmptyBorder(15, 15, 15, 15);
+    public static final Border LINE_BORDER = BorderFactory.createLineBorder(new Color(233, 236, 239));
+    public static final Border CARD_BORDER = BorderFactory.createCompoundBorder(
+            LINE_BORDER,
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+    );
 
-    public static void styleButton(JButton button, Color backgroundColor, String icon) {
+    // Utility Methods
+    public static void styleButton(JButton button, Color color, String icon) {
+        button.setFont(NORMAL_FONT);
+        button.setForeground(Color.WHITE);
+        button.setBackground(color);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         if (!icon.isEmpty()) {
             button.setText(icon + " " + button.getText());
         }
-        button.setBackground(backgroundColor);
-        button.setForeground(Color.WHITE);
-        button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(120, 35));
     }
 
     public static void styleTable(JTable table, JScrollPane scrollPane) {
-        table.setRowHeight(32);
-        table.setFont(LABEL_FONT);
-        table.setGridColor(new Color(230, 230, 230));
-        table.getTableHeader().setFont(TABLE_HEADER_FONT);
-        table.getTableHeader().setBackground(HEADER_COLOR);
-        table.getTableHeader().setForeground(Color.WHITE);
-        table.setSelectionBackground(PRIMARY_COLOR.brighter());
-        table.setSelectionForeground(Color.WHITE);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(221, 221, 221)));
+        table.setFont(NORMAL_FONT);
+        table.setRowHeight(35);
+        table.setShowGrid(true);
+        table.setGridColor(new Color(233, 236, 239));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        table.getTableHeader().setBackground(new Color(247, 248, 250));
+        table.getTableHeader().setForeground(FONT_COLOR);
+        table.setSelectionBackground(new Color(230, 240, 255));  // Lighter blue selection
+        table.setSelectionForeground(HEADER_COLOR);
+
+        scrollPane.setBorder(LINE_BORDER);
+        scrollPane.getViewport().setBackground(PANEL_BACKGROUND_COLOR);
     }
 
-    public static JPanel createBrandingPanel(String subtitle) {
-        JPanel brandingPanel = new JPanel(new GridBagLayout());
-        brandingPanel.setBackground(HEADER_COLOR); // Use the dark blue header color
-        brandingPanel.setPreferredSize(new Dimension(350, 0)); // Set a fixed width
+    public static JPanel createDashboardCard(String title, JLabel valueLabel, Color color) {
+        JPanel card = new JPanel();
+        card.setLayout(new BorderLayout(5, 5));
+        card.setBackground(new Color(252, 253, 255));  // Even lighter tint for cards
+        card.setBorder(CARD_BORDER);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 20, 10, 20);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(SMALL_FONT);
+        titleLabel.setForeground(FONT_COLOR);
 
-        JLabel appNameLabel = new JLabel("SafeShare");
-        appNameLabel.setFont(new Font("Segoe UI", Font.BOLD, 48));
-        appNameLabel.setForeground(Color.WHITE);
-        brandingPanel.add(appNameLabel, gbc);
+        valueLabel.setFont(HEADER_FONT);
+        valueLabel.setForeground(color);
 
-        gbc.gridy++;
-        gbc.insets = new Insets(0, 20, 10, 20);
-        JLabel subtitleLabel = new JLabel(subtitle);
-        subtitleLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14));
-        subtitleLabel.setForeground(Color.LIGHT_GRAY);
-        brandingPanel.add(subtitleLabel, gbc);
+        card.add(titleLabel, BorderLayout.NORTH);
+        card.add(valueLabel, BorderLayout.CENTER);
 
-        return brandingPanel;
+        return card;
     }
 }

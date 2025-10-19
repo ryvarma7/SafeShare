@@ -25,12 +25,12 @@ public class ViewerDialog extends JDialog {
         super(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
         this.requestId = requestId;
         this.parentComponent = parentComponent;
-        
+
         // Check if the request is expired before showing the dialog
         if (!checkValidAccess()) {
             throw new IllegalStateException("Access expired");
         }
-        
+
         if (view instanceof JComponent) {
             add(new JScrollPane(view));
         } else {
@@ -51,9 +51,9 @@ public class ViewerDialog extends JDialog {
 
     private void startExpiryMonitor() {
         if (requestId <= 0) {
-        return;
-    }
-        
+            return;
+        }
+
         expiryTimer = new Timer(true);
         expiryTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -71,17 +71,13 @@ public class ViewerDialog extends JDialog {
     }
 
     private boolean checkValidAccess() {
-        if (requestId == 0) {
-        return true;
-    }
-
-    if (requestId == -1) {
-        return false;
-    }
+        if (requestId <= 0) {
+            return true;
+        }
 
         String sql = "SELECT status, expiry_time FROM requests WHERE id = ? AND " +
-                    "status = 'approved' AND (expiry_time IS NULL OR expiry_time > NOW())";
-        
+                     "status = 'approved' AND (expiry_time IS NULL OR expiry_time > NOW())";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, requestId);
@@ -105,13 +101,13 @@ public class ViewerDialog extends JDialog {
 
     private void checkExpiry() {
         String sql = "SELECT status, expiry_time FROM requests WHERE id = ? AND " +
-                    "status = 'approved' AND (expiry_time IS NULL OR expiry_time > NOW())";
-        
+                     "status = 'approved' AND (expiry_time IS NULL OR expiry_time > NOW())";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, requestId);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (!rs.next()) {
                 // Access has expired
                 SwingUtilities.invokeLater(() -> {
@@ -126,33 +122,36 @@ public class ViewerDialog extends JDialog {
 
                         // Show expiry message with re-request option
                         int choice = JOptionPane.showConfirmDialog(parentComponent,
-                            "Your access to this file has expired.\nWould you like to submit a new request?",
-                            "Access Expired",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.WARNING_MESSAGE);
+                                "Your access to this file has expired.\nWould you like to submit a new request?",
+                                "Access Expired",
+                                JOptionPane.YES_NO_OPTION,
+                                JOptionPane.WARNING_MESSAGE);
 
-                        if (choice == JOptionPane.YES_OPTION && parentComponent instanceof UserPanel) {
-                            ((UserPanel) parentComponent).handleRequest();
+                        if (choice == JOptionPane.YES_OPTION) {
+                            if (parentComponent instanceof UserPanel userPanel) {
+                                userPanel.handleRequest();
+                            }
+                            // AdminPanel does not have handleRequest
                         }
 
                         // Refresh panels
-                        if (parentComponent instanceof UserPanel) {
-                            ((UserPanel) parentComponent).loadFiles();
-                        } else if (parentComponent instanceof AdminPanel) {
-                            ((AdminPanel) parentComponent).loadFiles();
-                            ((AdminPanel) parentComponent).loadRequests();
-                            ((AdminPanel) parentComponent).loadDashboardData();
+                        if (parentComponent instanceof UserPanel userPanel) {
+                            userPanel.loadFiles();
+                        } else if (parentComponent instanceof AdminPanel adminPanel) {
+                            adminPanel.loadFiles();
+                            adminPanel.loadRequests();
+                            adminPanel.loadDashboardData();
                         }
+
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(parentComponent,
-                            "Error updating request status: " + ex.getMessage(),
-                            "Database Error",
-                            JOptionPane.ERROR_MESSAGE);
+                                "Error updating request status: " + ex.getMessage(),
+                                "Database Error",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 });
             }
         } catch (SQLException e) {
-            // Log error but don't show to user to avoid interrupting viewing
             System.err.println("Error checking file access expiry: " + e.getMessage());
         }
     }

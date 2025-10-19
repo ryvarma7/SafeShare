@@ -7,8 +7,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DatabaseManager {
+    private static final Logger LOGGER = Logger.getLogger(DatabaseManager.class.getName());
     private static final String DB_URL = "jdbc:mysql://localhost:3306/secure_file_transfer";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "Sql@2112";
@@ -17,8 +21,10 @@ public class DatabaseManager {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             initializeDatabase();
-        } catch (Exception e) {
-            System.err.println("Failed to initialize database: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "MySQL JDBC driver not found", e);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Failed to initialize database", e);
         }
     }
 
@@ -64,7 +70,7 @@ public class DatabaseManager {
                 retries--;
                 if (retries > 0) {
                     try {
-                        Thread.sleep(1000);
+                        TimeUnit.SECONDS.sleep(1);
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
                         throw new SQLException("Connection attempt interrupted", ie);
@@ -87,7 +93,7 @@ public class DatabaseManager {
                 email = rs.getString("email");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error retrieving user email", e);
         }
         return email;
     }
@@ -103,7 +109,7 @@ public class DatabaseManager {
                 return rs.getInt("user_id");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error retrieving user ID from request", e);
         }
         return -1;
     }
@@ -132,7 +138,7 @@ public class DatabaseManager {
             stmt.setInt(3, requestId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error updating request status", e);
         }
         return false;
     }
@@ -182,7 +188,7 @@ public class DatabaseManager {
                 return storedKey != null && storedKey.equals(enteredKey);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error validating request key", e);
         }
         return false;
     }

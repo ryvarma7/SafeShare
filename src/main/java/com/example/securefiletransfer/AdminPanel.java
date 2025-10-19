@@ -39,29 +39,28 @@ public class AdminPanel extends JPanel {
         setBorder(UITheme.PADDED_BORDER);
 
         // --- Header ---
-        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        // Changed to BorderLayout to correctly align title left and buttons right
+        JPanel headerPanel = new JPanel(new BorderLayout(10, 0));
         headerPanel.setOpaque(false);
         JLabel welcomeLabel = new JLabel("Administrator Dashboard");
         welcomeLabel.setFont(UITheme.TITLE_FONT);
         welcomeLabel.setForeground(UITheme.HEADER_COLOR);
 
-        JButton chatButton = new JButton("Chat");
-JButton logoutButton = new JButton("Logout");
+        JButton logoutButton = new JButton("Logout");
 
-// Style buttons
-UITheme.styleButton(chatButton, UITheme.PRIMARY_COLOR,"");
-UITheme.styleButton(logoutButton, UITheme.REJECT_COLOR, UITheme.ICON_LOGOUT);
+        // Style button
+        UITheme.styleButton(logoutButton, UITheme.REJECT_COLOR, UITheme.ICON_LOGOUT);
 
-JPanel topButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-topButtonPanel.setOpaque(false);
-topButtonPanel.add(chatButton);
-topButtonPanel.add(logoutButton);
-headerPanel.add(topButtonPanel, BorderLayout.EAST);
+        // This panel correctly holds the buttons aligned to the right
+        JPanel topButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        topButtonPanel.setOpaque(false);
+        topButtonPanel.add(logoutButton);
 
-
-        headerPanel.add(welcomeLabel);
-        headerPanel.add(chatButton);
-        headerPanel.add(logoutButton);
+        // Add components to headerPanel using BorderLayout
+        headerPanel.add(welcomeLabel, BorderLayout.WEST);
+        headerPanel.add(topButtonPanel, BorderLayout.EAST);
+        
+        // Add the finished header to the main panel
         add(headerPanel, BorderLayout.NORTH);
 
         // --- Dashboard Cards ---
@@ -81,11 +80,14 @@ headerPanel.add(topButtonPanel, BorderLayout.EAST);
         JLabel tableTitle = new JLabel("Manage File Access Requests");
         tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         tableTitle.setForeground(UITheme.FONT_COLOR);
-        tableTitle.setBorder(BorderFactory.createEmptyBorder(0,0,10,0));
+        tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         requestsPanel.add(tableTitle, BorderLayout.NORTH);
 
-        requestsTableModel = new DefaultTableModel(new String[]{"Req ID", "Username", "Filename", "Status"}, 0){
-            @Override public boolean isCellEditable(int row, int column) { return false; }
+        requestsTableModel = new DefaultTableModel(new String[]{"Req ID", "Username", "Filename", "Status"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         requestsTable = new JTable(requestsTableModel);
         JScrollPane requestsScrollPane = new JScrollPane(requestsTable);
@@ -113,11 +115,14 @@ headerPanel.add(topButtonPanel, BorderLayout.EAST);
         JLabel filesTitle = new JLabel("Uploaded Files");
         filesTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         filesTitle.setForeground(UITheme.FONT_COLOR);
-        filesTitle.setBorder(BorderFactory.createEmptyBorder(0,0,10,0));
+        filesTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         filesPanel.add(filesTitle, BorderLayout.NORTH);
 
         filesTableModel = new DefaultTableModel(new String[]{"File ID", "Filename", "Uploaded By", "Upload Date"}, 0) {
-            @Override public boolean isCellEditable(int row, int column) { return false; }
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         filesTable = new JTable(filesTableModel);
         JScrollPane filesScrollPane = new JScrollPane(filesTable);
@@ -139,12 +144,12 @@ headerPanel.add(topButtonPanel, BorderLayout.EAST);
         filesPanel.add(filesButtonPanel, BorderLayout.SOUTH);
 
         // --- Layout ---
-        JPanel contentPanel = new JPanel(new GridLayout(2,1,10,10));
+        JPanel contentPanel = new JPanel(new GridLayout(2, 1, 10, 10));
         contentPanel.setOpaque(false);
         contentPanel.add(requestsPanel);
         contentPanel.add(filesPanel);
 
-        JPanel centerPanel = new JPanel(new BorderLayout(10,15));
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 15));
         centerPanel.setOpaque(false);
         centerPanel.add(cardsPanel, BorderLayout.NORTH);
         centerPanel.add(contentPanel, BorderLayout.CENTER);
@@ -158,7 +163,6 @@ headerPanel.add(topButtonPanel, BorderLayout.EAST);
         rejectButton.addActionListener(e -> handleReject());
         viewUserDetailsButton.addActionListener(e -> handleViewUserDetails());
         logoutButton.addActionListener(e -> SecureFileTransfer.logoutUser());
-        //chatButton.addActionListener(e -> SecureFileTransfer.openChatWindow()); // 2-way chat
 
         // --- Load Data ---
         refreshAllData(); // Load all data initially
@@ -173,8 +177,8 @@ headerPanel.add(topButtonPanel, BorderLayout.EAST);
 
     private void updateExpiredRequests() {
         String sql = "UPDATE requests " +
-                     "SET status = 'approved-expired', request_key = NULL " +
-                     "WHERE status = 'approved' AND expiry_time IS NOT NULL AND expiry_time < NOW()";
+                "SET status = 'approved-expired', request_key = NULL " +
+                "WHERE status = 'approved' AND expiry_time IS NOT NULL AND expiry_time < NOW()";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
@@ -200,9 +204,9 @@ headerPanel.add(topButtonPanel, BorderLayout.EAST);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     String details = "<html><b>Full Name:</b> " + rs.getString("full_name") + "<br>" +
-                                     "<b>Email:</b> " + rs.getString("email") + "<br>" +
-                                     "<b>Mobile:</b> " + rs.getString("mobile") + "<br>" +
-                                     "<b>Address:</b> " + rs.getString("address") + "</html>";
+                            "<b>Email:</b> " + rs.getString("email") + "<br>" +
+                            "<b>Mobile:</b> " + rs.getString("mobile") + "<br>" +
+                            "<b>Address:</b> " + rs.getString("address") + "</html>";
                     JOptionPane.showMessageDialog(this, new JLabel(details), "Details for " + username, JOptionPane.INFORMATION_MESSAGE);
                 }
             }
@@ -359,8 +363,8 @@ headerPanel.add(topButtonPanel, BorderLayout.EAST);
 
     public void loadDashboardData() {
         String sql = "SELECT (SELECT COUNT(*) FROM files) as total_files, " +
-                     "(SELECT COUNT(*) FROM requests WHERE status = 'pending') as pending_requests, " +
-                     "(SELECT COUNT(*) FROM requests WHERE status = 'approved' AND DATE(request_date) = CURDATE()) as approved_today";
+                "(SELECT COUNT(*) FROM requests WHERE status = 'pending') as pending_requests, " +
+                "(SELECT COUNT(*) FROM requests WHERE status = 'approved' AND DATE(request_date) = CURDATE()) as approved_today";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -377,8 +381,8 @@ headerPanel.add(topButtonPanel, BorderLayout.EAST);
     public void loadRequests() {
         requestsTableModel.setRowCount(0);
         String sql = "SELECT r.id, u.username, f.filename, r.status FROM requests r " +
-                     "JOIN users u ON r.user_id = u.id " +
-                     "JOIN files f ON r.file_id = f.id ORDER BY r.request_date DESC";
+                "JOIN users u ON r.user_id = u.id " +
+                "JOIN files f ON r.file_id = f.id ORDER BY r.request_date DESC";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
