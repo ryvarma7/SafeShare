@@ -9,7 +9,10 @@
 SafeShare enables secure management and sharing of files with a robust **two-role system** — **Administrator** and **User** — ensuring that sensitive documents are only accessed by authorized individuals.
 
 ### Users Can:
-- Register for an account with a password strength checker  
+- Register for an account with enhanced validation:
+  - Password strength checker
+  - Mobile number validation (10 digits only)
+  - Input field validation
 - Log in securely to their personal dashboard  
 - Browse a list of available files  
 - Request access to specific files  
@@ -134,6 +137,8 @@ mvn exec:java -Dexec.mainClass="com.example.securefiletransfer.SecureFileTransfe
 - Data stored in MySQL  
 - Prevents SQL injection (PreparedStatement)  
 - Clear UI-database separation  
+- Enhanced input validation
+- Optimized form performance
 
 ---
 
@@ -183,9 +188,28 @@ mvn exec:java -Dexec.mainClass="com.example.securefiletransfer.SecureFileTransfe
 - File download functionality  
 - User group management  
 - Enhanced admin controls  
-- Search and filtering options  
+- Search and filtering options
+- Email validation
+- Additional form validations
+- Enhanced mobile number formatting
 
 ---
 
-**Last Updated:** October 17, 2025  
-**Status:**  Completed
+**Last Updated:** October 19, 2025  
+**Status:** Completed  
+
+## Recent Updates
+
+### October 19, 2025
+- Enhanced mobile number validation:
+  - Strictly enforces 10-digit requirement
+  - Real-time validation using DocumentFilter
+  - Only allows numeric input
+- Improved registration form:
+  - Optimized scrolling performance
+  - Added helpful tooltips
+  - Clear fields after successful registration
+- Removed address field from system
+  - Updated database schema
+  - Simplified registration process
+  - Migration script provided
