@@ -177,8 +177,9 @@ public class AdminPanel extends JPanel {
 
     private void updateExpiredRequests() {
         String sql = "UPDATE requests " +
-                "SET status = 'approved-expired', request_key = NULL " +
-                "WHERE status = 'approved' AND expiry_time IS NOT NULL AND expiry_time < NOW()";
+                "SET status = 'expired', request_key = NULL " +
+                "WHERE (status = 'approved' OR status = 'approved-expired') " + 
+                "AND expiry_time IS NOT NULL AND expiry_time < NOW()";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
@@ -197,18 +198,16 @@ public class AdminPanel extends JPanel {
             return;
         }
         String username = (String) requestsTableModel.getValueAt(selectedRow, 1);
-        String sql = "SELECT full_name, email, mobile, address FROM users WHERE username = ?";
+        String sql = "SELECT full_name, email, mobile FROM users WHERE username = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String details = "<html><b>Full Name:</b> " + rs.getString("full_name") + "<br>" +
-                            "<b>Email:</b> " + rs.getString("email") + "<br>" +
-                            "<b>Mobile:</b> " + rs.getString("mobile") + "<br>" +
-                            "<b>Address:</b> " + rs.getString("address") + "</html>";
-                    JOptionPane.showMessageDialog(this, new JLabel(details), "Details for " + username, JOptionPane.INFORMATION_MESSAGE);
-                }
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String userDetails = "<html><b>Name:</b> " + rs.getString("full_name") + "<br/>" +
+                            "<b>Email:</b> " + rs.getString("email") + "<br/>" +
+                            "<b>Mobile:</b> " + rs.getString("mobile") + "</html>";
+                    JOptionPane.showMessageDialog(this, new JLabel(userDetails), "Details for " + username, JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

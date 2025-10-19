@@ -24,7 +24,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
@@ -32,7 +31,6 @@ import javax.swing.event.DocumentEvent;
 
 public class RegisterPanel extends JPanel {
     private final JTextField nameField, emailField, mobileField, usernameField;
-    private final JTextArea addressArea;
     private final JPasswordField passwordField;
     private final PasswordStrengthDots strengthDots;
     private final JLabel strengthLabel;
@@ -80,8 +78,32 @@ public class RegisterPanel extends JPanel {
         this.nameField = createStyledTextField();
         this.emailField = createStyledTextField();
         this.mobileField = createStyledTextField();
+        // Add mobile number validation
+        ((javax.swing.text.PlainDocument) this.mobileField.getDocument()).setDocumentFilter(new javax.swing.text.DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, javax.swing.text.AttributeSet attr) throws javax.swing.text.BadLocationException {
+                // Only allow digits
+                String filtered = string.replaceAll("[^0-9]", "");
+                // Check if adding this string would exceed 10 digits
+                if (fb.getDocument().getLength() + filtered.length() <= 10) {
+                    super.insertString(fb, offset, filtered, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, javax.swing.text.AttributeSet attrs) throws javax.swing.text.BadLocationException {
+                // Only allow digits
+                String filtered = text.replaceAll("[^0-9]", "");
+                // Check if the replacement would exceed 10 digits
+                if (fb.getDocument().getLength() - length + filtered.length() <= 10) {
+                    super.replace(fb, offset, length, filtered, attrs);
+                }
+            }
+        });
+
+        // Add a tooltip instead of placeholder
+        this.mobileField.setToolTipText("Enter 10 digit mobile number");
         this.usernameField = createStyledTextField();
-        this.addressArea = new JTextArea(10, 25);  // Increased number of visible rows
         this.passwordField = createStyledPasswordField();
         this.strengthDots = new PasswordStrengthDots();
         this.strengthLabel = new JLabel("");
@@ -138,9 +160,9 @@ public class RegisterPanel extends JPanel {
         // Add padding around the form itself
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        // Configure form panel to expand properly
-        formPanel.setMinimumSize(new Dimension(800, 700));
-        formPanel.setPreferredSize(new Dimension(1000, 800));
+        // Configure form panel for optimal scrolling
+        formPanel.setPreferredSize(new Dimension(800, 700));
+        formPanel.setDoubleBuffered(true);
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridwidth = GridBagConstraints.REMAINDER;
@@ -178,29 +200,7 @@ public class RegisterPanel extends JPanel {
         gbc.insets = PADDING_FIELD;
         formPanel.add(mobileField, gbc);
 
-        // Address
-        gbc.insets = PADDING_FIELD_LABEL;
-        formPanel.add(createLabel("Address:"), gbc);
-        // Configure address text area with more space
-        addressArea.setLineWrap(true);
-        addressArea.setWrapStyleWord(true);
-        addressArea.setFont(FONT_BODY);
-        addressArea.setBorder(BorderFactory.createCompoundBorder(
-            createTextFieldBorder(false),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)  // Add internal padding
-        ));
-        addTextFieldFocusListener(addressArea);
 
-        // Create a much taller scroll pane for address
-        JScrollPane addressScrollPane = new JScrollPane(addressArea);
-        addressScrollPane.setPreferredSize(new Dimension(FIELD_SIZE.width, 300)); // Much taller height for more visible text
-        addressScrollPane.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0)); // Add some vertical spacing
-        addressScrollPane.setBackground(BACKGROUND_WHITE);
-        addressScrollPane.getViewport().setBackground(BACKGROUND_WHITE);
-        
-        // Add extra padding around the address field
-        gbc.insets = new Insets(0, 0, 25, 0); // More bottom padding
-        formPanel.add(addressScrollPane, gbc);
 
         // Username
         gbc.insets = PADDING_FIELD_LABEL;
@@ -259,12 +259,18 @@ public class RegisterPanel extends JPanel {
         formScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         formScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         
+        // Optimize scrolling speed and smoothness
+        formScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        formScrollPane.getVerticalScrollBar().setBlockIncrement(64);
+        formScrollPane.setDoubleBuffered(true);
+        
         // Make sure the form panel uses available space
         formPanel.setPreferredSize(new Dimension(800, 700));
         
         // Configure scroll pane to expand properly
         formScrollPane.setPreferredSize(null); // Let it be determined by content
         formScrollPane.getViewport().setOpaque(false);
+        formScrollPane.getViewport().setScrollMode(javax.swing.JViewport.SIMPLE_SCROLL_MODE); // Faster scroll mode
         
         // Add the scroll pane to fill the card
         card.add(formScrollPane, BorderLayout.CENTER);
@@ -417,12 +423,22 @@ public class RegisterPanel extends JPanel {
         String fullName = nameField.getText();
         String email = emailField.getText();
         String mobile = mobileField.getText();
-        String address = addressArea.getText();
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        if (fullName.isEmpty() || email.isEmpty() || mobile.isEmpty() || address.isEmpty() || username.isEmpty() || password.isEmpty()) {
+        if (fullName.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, "All fields are required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String mobileNumber = mobileField.getText();
+        if (mobileNumber.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a mobile number.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (mobileNumber.length() != 10) {
+            JOptionPane.showMessageDialog(this, "Mobile number must be exactly 10 digits.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -431,16 +447,23 @@ public class RegisterPanel extends JPanel {
             return;
         }
 
-        String sql = "INSERT INTO users (full_name, email, mobile, address, username, password, role) VALUES (?, ?, ?, ?, ?, ?, 'user')";
+        String sql = "INSERT INTO users (full_name, email, mobile, username, password, role) VALUES (?, ?, ?, ?, ?, 'user')";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, fullName);
             statement.setString(2, email);
             statement.setString(3, mobile);
-            statement.setString(4, address);
-            statement.setString(5, username);
-            statement.setString(6, password);
+            statement.setString(4, username);
+            statement.setString(5, password);
             statement.executeUpdate();
+            
+            // Clear all fields for new registration
+            nameField.setText("");
+            emailField.setText("");
+            mobileField.setText("");
+            usernameField.setText("");
+            passwordField.setText("");
+            
             JOptionPane.showMessageDialog(this, "Registration successful! Please log in.");
             SecureFileTransfer.showPanel("UserLogin");
         } catch (SQLIntegrityConstraintViolationException ex) {

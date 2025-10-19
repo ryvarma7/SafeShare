@@ -36,10 +36,23 @@ public class StatusCellRenderer extends DefaultTableCellRenderer {
             label.setFont(new Font("Segoe UI", Font.BOLD, 14));
             label.setOpaque(true);
 
+            // Convert display text for certain statuses
+            String displayText = switch (status.toLowerCase()) {
+                case "not requested" -> "NOT REQUESTED";
+                case "approved-expired", "expired" -> "EXPIRED";
+                default -> status.toUpperCase();
+            };
+            label.setText(displayText);
+
+            // Set appropriate colors
             Color bgColor = switch (status.toLowerCase()) {
                 case "pending" -> PENDING_BG;
                 case "approved" -> APPROVED_BG;
                 case "rejected" -> REJECTED_BG;
+                case "expired", "approved-expired" -> {
+                    label.setForeground(Color.BLACK);
+                    yield new Color(180, 180, 180); // Gray for expired
+                }
                 default -> {
                     label.setForeground(Color.BLACK);
                     yield DEFAULT_BG;

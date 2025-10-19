@@ -15,7 +15,6 @@ CREATE TABLE users (
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     mobile VARCHAR(20) NOT NULL,
-    address TEXT NOT NULL,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
@@ -38,7 +37,7 @@ CREATE TABLE requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     file_id INT NOT NULL,
-    status ENUM('pending', 'approved', 'approved-expired', 'rejected', 'expired') NOT NULL DEFAULT 'pending',
+    status ENUM('pending', 'approved', 'rejected', 'expired') NOT NULL DEFAULT 'pending',
     request_key VARCHAR(255) NULL,
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expiry_time TIMESTAMP NULL,  -- NULL means no expiry
@@ -49,5 +48,5 @@ CREATE TABLE requests (
 );
 
 -- Insert default administrator
-INSERT INTO users (full_name, email, mobile, address, username, password, role) 
-VALUES ('Default Admin', 'admin@system.com', '0000000000', 'System Address', 'admin', '00000', 'admin');
+INSERT INTO users (full_name, email, mobile, username, password, role) 
+VALUES ('Default Admin', 'admin@system.com', '0000000000', 'admin', '00000', 'admin');

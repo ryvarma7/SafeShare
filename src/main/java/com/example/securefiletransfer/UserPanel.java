@@ -254,8 +254,11 @@ public class UserPanel extends JPanel {
         filesTableModel.setRowCount(0);
         String sql = """
             SELECT f.id, f.filename,
-            CASE WHEN r.expiry_time < NOW() AND r.status = 'approved' THEN 'Expired'
-                 ELSE r.status END AS status
+            CASE 
+                WHEN r.expiry_time < NOW() AND r.status IN ('approved', 'approved-expired') THEN 'expired'
+                WHEN r.status IS NULL THEN 'Not Requested'
+                ELSE LOWER(r.status)
+            END AS status
             FROM files f
             LEFT JOIN requests r ON f.id = r.file_id AND r.user_id = ?
             ORDER BY f.upload_date DESC
