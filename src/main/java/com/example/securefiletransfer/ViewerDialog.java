@@ -145,8 +145,8 @@ public class ViewerDialog extends JDialog {
 
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(parentComponent,
-                                "Error updating request status: " + ex.getMessage(),
-                                "Database Error",
+                                "File Has Been Expired: " + ex.getMessage(),
+                                "File Expired",
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 });

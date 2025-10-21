@@ -1,5 +1,4 @@
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\AdminPanel.java
-d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\ChatPanel.java
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\DatabaseManager.java
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\EmailSender.java
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\FileHandler.java
@@ -9,6 +8,6 @@ d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\RegisterPanel
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\SecureFileTransfer.java
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\StatusCellRenderer.java
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\TestEmail.java
-d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\UserChatDialog.java
+d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\UITheme.java
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\UserPanel.java
 d:\SecureFileTransfer\src\main\java\com\example\securefiletransfer\ViewerDialog.java

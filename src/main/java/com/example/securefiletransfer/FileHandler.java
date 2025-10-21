@@ -176,7 +176,7 @@ public class FileHandler {
             int pageCount = document.getNumberOfPages();
             JPanel pdfPanel = new JPanel(new GridLayout(0, 1, 0, 10));
             for (int page = 0; page < pageCount; page++) {
-                BufferedImage image = pdfRenderer.renderImageWithDPI(page, 100);
+                BufferedImage image = pdfRenderer.renderImageWithDPI(page, 300);
                 ImageIcon icon = new ImageIcon(image);
                 if (icon.getIconWidth() > 800) {
                     Image scaled = icon.getImage().getScaledInstance(800, -1, Image.SCALE_SMOOTH);

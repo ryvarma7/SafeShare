@@ -1,6 +1,5 @@
 com\example\securefiletransfer\PasswordStrengthDots.class
 com\example\securefiletransfer\ViewerDialog.class
-com\example\securefiletransfer\ChatPanel.class
 com\example\securefiletransfer\AdminPanel$2.class
 com\example\securefiletransfer\SecureFileTransfer.class
 com\example\securefiletransfer\FileHandler$1.class
@@ -12,13 +11,15 @@ com\example\securefiletransfer\DatabaseManager.class
 com\example\securefiletransfer\LoginPanel.class
 com\example\securefiletransfer\UserPanel.class
 com\example\securefiletransfer\LoginPanel$1.class
-com\example\securefiletransfer\ChatPanel$1.class
+com\example\securefiletransfer\RegisterPanel$2.class
 com\example\securefiletransfer\FileHandler.class
-com\example\securefiletransfer\UserChatDialog.class
+com\example\securefiletransfer\RegisterPanel$1PasswordStrength.class
 com\example\securefiletransfer\AdminPanel$1.class
 com\example\securefiletransfer\RegisterPanel$1.class
+com\example\securefiletransfer\RegisterPanel$3.class
 com\example\securefiletransfer\AdminPanel.class
 com\example\securefiletransfer\ViewerDialog$1.class
 com\example\securefiletransfer\EmailSender$1.class
 com\example\securefiletransfer\TestEmail.class
 com\example\securefiletransfer\EmailSender.class
+com\example\securefiletransfer\UITheme.class
