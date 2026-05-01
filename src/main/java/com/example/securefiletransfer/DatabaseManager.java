@@ -30,7 +30,7 @@ public class DatabaseManager {
 
     //  Initialize DB — keeps your existing logic
     private static void initializeDatabase() throws SQLException {
-        try (Connection conn = getConnection()) {
+        try(Connection conn = getConnection()) {
             String checkColumn = "SELECT COUNT(*) FROM information_schema.columns " +
                                  "WHERE table_schema = 'secure_file_transfer' " +
                                  "AND table_name = 'requests' " +
