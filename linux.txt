@@ -1,0 +1,77 @@
+Create a group named developers with GID 3000. 
+Create a group named testing without specifying a GID. 
+Create a user arun with: 
+UID 2101 
+Primary group: developers 
+Secondary group: testing 
+A home directory 
+A login shell of /bin/bash 
+Set a password for the user. 
+4. Create a user meena with: 
+No manually specified UID 
+Primary group: developers 
+Secondary group: testing 
+A home directory 
+/bin/bash as the login shell 
+Set a password. 
+5.  Create a user ravi with: 
+UID 2103 
+Primary group: testing 
+No secondary group 
+A home directory 
+No interactive login shell 
+Set a password.
+
+
+2. Create a group faculty with GID 4000. 
+Create a group research without specifying a GID. 
+Create a group labusers without specifying a GID. 
+Create user professor1 with: 
+UID 3101 
+Primary group: faculty 
+Secondary group: research 
+Home directory 
+/bin/bash shell 
+Password authentication enabled. 
+Create user researcher1 with: 
+UID automatically assigned by Linux 
+Primary group: research 
+Secondary group: labusers 
+Home directory 
+/bin/bash shell 
+Set a password. 
+Create user labservice with: 
+UID 3103 
+Primary group: labusers 
+No secondary group 
+Home directory 
+/sbin/nologin as the login shell 
+Set a password.
+
+
+
+Scenario:
+A company has hired a new employee named Arun who belongs to the developers department. The administrator wants the developers group to be Arun's primary group.
+Question:
+As the system administrator:
+Create a group named developers. 
+Create the user arun. 
+Assign developers as Arun's primary group. 
+Verify Arun's UID, GID, home directory, and primary group.
+
+Scenario:
+The employee ravi initially belongs to the developers group as his primary group and testing as a secondary group. He is now assigned to the security team as well.
+Question:
+Modify Ravi's account so that:
+Primary group = developers 
+Secondary groups = testing, security 
+Verify the changes without changing his primary group.
+
+A new employee sarah has joined the organization. The administrator must create her account and assign an initial password.
+Question:
+Create the user sarah and assign a password. Verify that the account exists.
+
+The system administrator receives a request that user john must change his password because his current password has expired.
+Question:
+Change John's password using the appropriate Linux command.
+
